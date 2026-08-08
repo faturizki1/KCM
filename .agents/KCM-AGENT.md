@@ -1,222 +1,294 @@
-KCM — MASTER AGENT & SKILL GOVERNANCE
+# KCM ENGINEERING AGENT GOVERNANCE
 
-Bounded Subsystem + Contract-Driven Engineering System
+## Purpose
+This document defines how engineering agents work in KCM during the contract-lock and workspace-initialization phase. It is a governance document only and does not implement product features.
 
-Document Type: AI Agent Governance Specification
-System: KCM — Knowledge Columnar Model
-Authority: "KCM-WHITEPAPER.md"
-Status: Mandatory / Immutable Governance
-Purpose: Multi-Agent Parallel Engineering
-Primary Principle: Bounded Subsystem + Explicit Contract + Canonical Knowledge Model
+## Absolute Source of Truth
+- KCM-WHITEPAPER.md is the absolute architectural source of truth.
+- Do not edit, move, rename, delete, or reinterpret it.
+- If engineering documents differ from the whitepaper, the whitepaper wins.
+- If the whitepaper does not define a point, mark it as UNDEFINED or BLOCKED rather than converting it into architectural fact.
+- Use ASSUMPTION, PROPOSAL, BLOCKED, and REQUIRES REVIEW when appropriate.
 
----
+## Architecture Document Hierarchy
+The authority hierarchy is:
+1. KCM-WHITEPAPER.md
+2. docs/architecture/BOUNDED-SUBSYSTEMS.md
+3. docs/architecture/OWNERSHIP-MATRIX.md
+4. docs/architecture/DEPENDENCY-GRAPH.md
+5. docs/architecture/SUBSYSTEM-CONTRACTS.md
+6. docs/engineering/PARALLEL-WORK-MAP.md
+7. Subsystem documentation
+8. Implementation
 
-0. ABSOLUTE DIRECTIVE
+Implementation must not become a source of architecture definition.
 
-Anda adalah KCM Engineering Orchestrator.
-
-Tugas utama Anda bukan sekadar menghasilkan kode.
-
-Tugas utama Anda adalah memastikan bahwa seluruh AI agent, sub-agent, skill, engineer-agent, reviewer-agent, documentation-agent, testing-agent, dan architecture-agent bekerja sebagai satu sistem engineering yang konsisten.
-
-KCM harus diperlakukan sebagai satu produk utuh.
-
-Setiap perubahan harus mempertahankan:
-
-Architecture
-+
-Canonical Knowledge Model
-+
-Subsystem Boundaries
-+
-Contracts
-+
-Correctness
-+
-Performance
-+
-Durability
-+
-Determinism
-+
-Provenance
-+
-Documentation
-
-Tidak ada agent yang memiliki kewenangan untuk mengubah fundamental KCM hanya karena perubahan tersebut membuat implementasi lebih mudah.
-
----
-
-1. SUPREME SOURCE OF TRUTH
-
-1.1 Dokumen Tertinggi
-
-File:
-
-KCM-WHITEPAPER.md
-
-adalah:
-
-«ABSOLUTE SOURCE OF TRUTH»
-
-Dokumen ini memiliki otoritas tertinggi terhadap:
-
-- identitas KCM
-- tujuan KCM
-- filosofi KCM
-- canonical knowledge model
-- columnar architecture
-- storage principles
-- reasoning principles
-- deterministic execution
-- provenance
-- temporal semantics
-- versioning
-- transaction semantics
-- security principles
-- distributed architecture
-- performance objectives
+## Contract Freeze
+Before engineering work begins, the following must be frozen:
 - subsystem boundaries
-- engineering principles
+- ownership
+- dependency direction
+- public interfaces
+- data ownership
+- contract semantics
+- responsibility boundaries
 
----
+Agents must not change these unilaterally. If a change is needed, create a change proposal.
 
-2. IMMUTABLE WHITEPAPER RULE
+### Change Proposal Format
+- CHANGE-ID:
+- AFFECTED-SUBSYSTEM:
+- CURRENT-CONTRACT:
+- PROPOSED-CONTRACT:
+- REASON:
+- WHITEPAPER-REFERENCE:
+- DEPENDENCY-IMPACT:
+- BREAKING-CHANGE:
+- MIGRATION-IMPACT:
+- TEST-IMPACT:
+- DOCUMENTATION-IMPACT:
+- Status: PROPOSED / REVIEW / APPROVED / REJECTED / IMPLEMENTED
 
-SEMUA AGENT DILARANG:
+## Subsystem Workspace Initialization
+Each bounded subsystem must have an engineering workspace under agents/<subsystem>/ with the following files:
+- README.md
+- RESPONSIBILITY.md
+- CONTRACT.md
+- DEPENDENCIES.md
+- WORK-QUEUE.md
+- DECISIONS.md
+- CHANGES.md
+- VALIDATION.md
 
-- mengedit "KCM-WHITEPAPER.md"
-- mengganti isi "KCM-WHITEPAPER.md"
-- menghapus bagian "KCM-WHITEPAPER.md"
-- melakukan formatting ulang yang mengubah makna
-- melakukan "improvement" langsung terhadap whitepaper
-- mengubah requirement agar sesuai dengan implementasi
-- menurunkan requirement karena implementasi sulit
-- menghilangkan requirement yang belum tersedia
+Workspaces are based on SUBSYSTEM, not on agent identity.
 
-Jika agent menemukan konflik:
+## Agent Role Model
+Every agent must define:
+- AGENT-ID
+- SUBSYSTEM
+- ROLE
+- OWNER
+- ALLOWED-PATHS
+- READ-ONLY-PATHS
+- FORBIDDEN-PATHS
+- DEPENDENCIES
+- INPUT-CONTRACT
+- OUTPUT-CONTRACT
+- VALIDATION-REQUIREMENTS
 
-IMPLEMENTATION
-      ↓
-CONFLICT
-      ↓
-KCM-WHITEPAPER.md
-      ↓
-WHITEPAPER WINS
+Example:
+- AGENT-ID: KCM-STORAGE-001
+- SUBSYSTEM: Storage Layer
+- ROLE: Storage Engineer
+- OWNER: Storage Steward
+- ALLOWED-PATHS: storage/**, agents/storage/**, docs/storage/**
+- READ-ONLY: KCM-WHITEPAPER.md, docs/architecture/**
+- FORBIDDEN: knowledge/**, compute/**, memory/**
 
-Agent harus memperbaiki implementasi.
+Agents must not write outside their ownership boundary.
 
-BUKAN:
+## Read-First Protocol
+Before changing any file, an agent must read:
+1. KCM-WHITEPAPER.md
+2. docs/architecture/BOUNDED-SUBSYSTEMS.md
+3. docs/architecture/OWNERSHIP-MATRIX.md
+4. docs/architecture/DEPENDENCY-GRAPH.md
+5. docs/architecture/SUBSYSTEM-CONTRACTS.md
+6. docs/engineering/PARALLEL-WORK-MAP.md
+7. The subsystem documentation itself
+8. The documentation of directly dependent subsystems
 
-implementation
-      ↓
-modify whitepaper
+Agents must not begin work from a task prompt alone.
 
----
+## Ownership Rule
+One file or source area may have only one primary owner.
+- If another subsystem needs access, it must consume the contract.
+- It must not modify the owned area directly.
+- If a change is needed, the request must go through a change proposal to the owner.
 
-3. WHITEPAPER CHANGE POLICY
+## Cross-Subsystem Modification Rule
+Agents must not modify another subsystem merely because a dependency is inconvenient.
+If a cross-subsystem change is required, it must follow:
+1. Contract issue
+2. Subsystem owner review
+3. Change proposal
+4. Review
+5. Approval
+6. Implementation
 
-Jika ditemukan requirement yang:
+## Contract-First Development
+Implementation must start from the contract, in this order:
+1. Contract
+2. Type/data model
+3. Interface
+4. Test
+5. Implementation
+6. Integration
+7. Documentation
 
-- ambigu
-- kontradiktif
-- tidak realistis
-- tidak lengkap
-- memerlukan keputusan arsitektural baru
+Do not determine the contract after implementation.
 
-agent DILARANG langsung mengubah whitepaper.
+## No Architectural Leakage
+Subsystems must not use internal implementation details of other subsystems.
+Use public contract boundaries only.
+Forbidden behavior includes:
+- direct access to internal state
+- bypassing the API/interface
+- reading private storage structure
+- creating hidden dependency
+- circular dependency
 
-Agent harus membuat:
+## Documentation-as-Code Rule
+Documentation is part of engineering work, not an afterthought.
+Every change must consider:
+- architecture
+- contract
+- API
+- data model
+- error semantics
+- performance
+- test
+- documentation
 
-docs/governance/WHITEPAPER-ISSUE.md
+If implementation changes but documentation is not updated, the task is incomplete.
 
-dengan format:
+## Change Traceability
+Every change must be traceable through:
+KCM-WHITEPAPER.md -> architecture -> subsystem -> contract -> task -> code -> test -> documentation
 
-Issue ID:
-Affected Section:
-Observed Conflict:
-Current Interpretation:
-Impact:
-Possible Solutions:
-Recommended Solution:
-Risk:
-Required Decision:
+No significant change may occur without traceability.
 
-Perubahan whitepaper hanya dapat dilakukan oleh Human Architecture Authority.
+## Work Item Format
+Each agent task must include:
+- TASK-ID
+- SUBSYSTEM
+- OWNER
+- OBJECTIVE
+- INPUT
+- EXPECTED-OUTPUT
+- DEPENDENCIES
+- ALLOWED-FILES
+- FORBIDDEN-FILES
+- CONTRACTS-AFFECTED
+- TEST-REQUIREMENTS
+- DOCUMENTATION-REQUIREMENTS
+- ACCEPTANCE-CRITERIA
 
-AI agent tidak memiliki kewenangan tersebut.
+Tasks without acceptance criteria must not start.
 
----
+## Parallel Execution Rule
+A task may run in parallel only if:
+- ownership differs
+- file ownership differs
+- contract is stable
+- no shared mutable implementation exists
+- dependencies are already available
+- no migration conflict exists
 
-4. SECONDARY SOURCE HIERARCHY
+If any condition is not met, serialize the work.
 
-Urutan otoritas:
+## Shared File Rule
+Files touched by more than one subsystem are high-risk shared artifacts.
+Do not allow multiple agents to modify them simultaneously.
+Define:
+- PRIMARY OWNER
+- CONTRIBUTORS
+- REVIEWER
 
-LEVEL 0
-KCM-WHITEPAPER.md
-        ↓
-LEVEL 1
-Architecture Decision Records
-        ↓
-LEVEL 2
-Subsystem Contracts
-        ↓
-LEVEL 3
-Subsystem Specifications
-        ↓
-LEVEL 4
-API / Interface Contracts
-        ↓
-LEVEL 5
-Tests
-        ↓
-LEVEL 6
-Implementation
-        ↓
-LEVEL 7
-Examples / Tutorials / Notes
+The primary owner controls the final merge.
 
-Jika terdapat konflik:
+## Conflict Protocol
+If there is a merge conflict, contract conflict, architecture conflict, ownership conflict, dependency conflict, documentation conflict, or semantic conflict, stop and create a conflict report.
 
-Higher authority ALWAYS wins.
+Use:
+- CONFLICT-ID
+- CONFLICT-TYPE
+- AFFECTED-SUBSYSTEMS
+- CURRENT-STATES
+- CONFLICTING-ASSUMPTIONS
+- WHITEPAPER-REFERENCE
+- PROPOSED-RESOLUTIONS
+- RECOMMENDATION
 
----
+## Validation Gate
+A task is not complete merely because code compiles.
+Definition of done includes:
+- architecture compliant
+- ownership compliant
+- dependency compliant
+- contract compliant
+- implementation complete
+- tests pass
+- regression checked
+- documentation updated
+- no unauthorized changes
+- no unresolved TODO
+- no hidden dependency
+- no contract violation
 
-5. FUNDAMENTAL ARCHITECTURAL LAW
+## Agent Output
+Each agent must produce:
+1. IMPLEMENTATION SUMMARY
+2. FILES CHANGED
+3. CONTRACTS USED
+4. DEPENDENCIES USED
+5. TEST RESULTS
+6. PERFORMANCE IMPACT
+7. DOCUMENTATION UPDATED
+8. KNOWN LIMITATIONS
+9. OPEN ISSUES
+10. NEXT DEPENDENCY
 
-KCM harus tetap:
+## No Silent Decisions
+Agents must not silently decide architecture, protocol, schema, ownership, dependency, performance target, persistence semantics, consistency semantics, error semantics, or compatibility policy.
+If undefined, mark it as UNDEFINED and create a proposal.
 
-«Knowledge Columnar Model»
+## Quality Priority
+1. Correctness
+2. Architectural integrity
+3. Contract integrity
+4. Determinism
+5. Data integrity
+6. Reliability
+7. Testability
+8. Maintainability
+9. Performance
+10. Optimization
 
-KCM bukan:
+## Anti-Scope-Creep
+Agents must only perform the assigned task.
+Do not add unrequested features or expand scope.
 
-- LLM
-- Vector Database
-- Graph Database
-- relational database yang diberi fitur knowledge
-- document database
-- graph-only engine
-- probabilistic reasoning engine
+## Engineering Journal
+Each subsystem must maintain:
+- DECISIONS.md
+- CHANGES.md
+- VALIDATION.md
 
-KCM Core harus tetap:
+## Final Integration
+Integration work must not silently repair subsystem issues by changing subsystems broadly.
+Integration only:
+- combines contract-compliant implementation
+- runs integration tests
+- finds incompatibility
+- creates issues
+- asks owners to fix their subsystem
 
-Knowledge-first
-+
-Columnar-native
-+
-Deterministic
-+
-Provenance-aware
-+
-Temporal-aware
-+
-Version-aware
-+
-Enterprise-grade
+## Architecture Review Gate
+Any change touching subsystem boundaries, public contracts, dependency direction, storage format, persistence semantics, concurrency semantics, consistency semantics, core data model, public API, or cross-subsystem protocol requires architecture review.
 
----
+## Final Principle
+KCM is one system, not a set of loosely coordinated code changes. Each agent is a worker in that system.
 
-6. CANONICAL KNOWLEDGE LAW
+No local optimization may damage global architecture.
+No shortcut may damage contract.
+No implementation may conflict with the whitepaper.
+No silent architectural decision.
+No unowned code.
+No undocumented contract.
+No unvalidated change.
+
+All work must remain traceable, deterministic, isolated, contract-driven, owner-driven, tested, documented, and auditable.
 
 Semua subsystem harus berinteraksi dengan canonical KCM representation.
 
